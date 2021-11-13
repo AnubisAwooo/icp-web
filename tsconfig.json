@@ -16,5 +16,8 @@
     "src/icp_web_assets/src/**/*.d.ts", 
     "src/icp_web_assets/src/**/*.tsx", 
     "src/icp_web_assets/src/**/*.vue"
+  ],
+  "exclude": [
+    "src/icp_web_assets/src/vite.config.ts"
   ]
 }

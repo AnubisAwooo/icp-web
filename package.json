@@ -9,10 +9,10 @@
     "Canister"
   ],
   "scripts": {
-    "dev": "vite serve src/icp_web_assets/src",
-    "build": "webpack",
+    "dev": "vite",
+    "build": "vite build",
     "prebuild": "npm run copy:types",
-    "start": "webpack serve --mode development --env development",
+    "start": "vite serve --mode development --env development",
     "prestart": "npm run copy:types",
     "copy:types": "rsync -avr .dfx/$(echo ${DFX_NETWORK:-'**'})/canisters/** --exclude='assets/' --exclude='idl/' --exclude='*.wasm' --delete src/declarations"
   },
@@ -32,12 +32,13 @@
     "process": "0.11.10",
     "stream-browserify": "3.0.0",
     "terser-webpack-plugin": "5.1.1",
-    "typescript": "^4.4.3",
+    "ts-loader": "^9.2.6",
+    "typescript": "^4.4.4",
     "util": "0.12.3",
     "vite": "^2.6.4",
     "vue-tsc": "^0.3.0",
     "webpack": "5.24.4",
-    "webpack-cli": "^4.5.0",
+    "webpack-cli": "^4.9.1",
     "webpack-dev-server": "^4.5.0"
   },
   "browserslist": [
