@@ -9,10 +9,10 @@
     "Canister"
   ],
   "scripts": {
-    "dev": "vite",
+    "dev": "vite serve --mode development",
     "build": "vite build",
     "prebuild": "npm run copy:types",
-    "start": "vite serve --mode development --env development",
+    "start": "vite serve --mode development",
     "prestart": "npm run copy:types",
     "copy:types": "rsync -avr .dfx/$(echo ${DFX_NETWORK:-'**'})/canisters/** --exclude='assets/' --exclude='idl/' --exclude='*.wasm' --delete src/declarations"
   },
