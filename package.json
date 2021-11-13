@@ -15,6 +15,9 @@
     "prestart": "npm run copy:types",
     "copy:types": "rsync -avr .dfx/$(echo ${DFX_NETWORK:-'**'})/canisters/** --exclude='assets/' --exclude='idl/' --exclude='*.wasm' --delete src/declarations"
   },
+  "dependencies": {
+    "vue": "^3.2.21"
+  },
   "devDependencies": {
     "@dfinity/agent": "0.10.1",
     "@dfinity/candid": "0.10.1",
@@ -27,6 +30,8 @@
     "process": "0.11.10",
     "stream-browserify": "3.0.0",
     "terser-webpack-plugin": "5.1.1",
+    "ts-loader": "^9.2.6",
+    "typescript": "^4.4.4",
     "util": "0.12.3",
     "webpack": "5.24.4",
     "webpack-cli": "^4.5.0",
