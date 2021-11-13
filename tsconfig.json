@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "useDefineForClassFields": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "strict": true,
+    "jsx": "preserve",
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "lib": ["esnext", "dom"]
+  },
+  "include": [
+    "src/icp_web_assets/src/**/*.ts", 
+    "src/icp_web_assets/src/**/*.d.ts", 
+    "src/icp_web_assets/src/**/*.tsx", 
+    "src/icp_web_assets/src/**/*.vue"
+  ]
+}
