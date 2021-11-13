@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from "path";
 
@@ -30,31 +30,67 @@ function initCanisterIds() {
 }
 initCanisterIds();
 
+const isDevelopment = process.env.NODE_ENV !== "production";
+const asset_entry = path.join(
+  "src",
+  "icp_web_assets",
+  "src",
+  "index.html"
+);
+
 export default defineConfig(({ command, mode }) => {
-  let common = {
-    plugins: [vue()],
+  let common: UserConfig = {
     root: './src/icp_web_assets/src', // vite 执行的根目录
     publicDir: '../assets',
-    build: {
-      outDir: '../../../dist/icp_web_assets', // 构建输出目录
-    },
+    mode,
     define: {
       'process.env': { // 恢复环境变量
         ...process.env,
         'MODE': mode,
         isDevelopment: mode !== 'production', // 判断是否是开发模式
       } 
-    }
+    },
+    plugins: [vue()],
+    resolve: {
+      alias: { // 别名解析路径 @ 什么的
+        "@": path.resolve(__dirname, "src/icp_web_assets/src"),
+      },
+      extensions: [".js", ".ts", ".jsx", ".tsx"], // import 可以省略的拓展名
+    },
+    server: {
+      proxy: {
+        "/api": {
+          target: "http://localhost:8000",
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+        },
+      },
+      cors: true,
+      watch: {
+        ignored: ['!**/node_modules/your-package-name/**']
+      }
+    },
+    build: {
+      outDir: '../../../dist/icp_web_assets', // 构建输出目录
+      minify: mode !== 'production' ? false : 'terser',
+    },
   };
   if (command === 'serve') {
     return {
-      // serve 独有配置
-      ...common
+      // serve 独有配置 开发模式
+      ...common,
+      
+      logLevel: 'error', // 不知道体现在哪里
+      clearScreen: false, 
+      optimizeDeps: {
+        exclude: ['icp_web_assets'] // 不知道有没有用
+      }
     }
   } else {
     return {
-      // build 独有配置
-      ...common
+      // build 独有配置 生产模式
+      ...common,
+      logLevel: 'info',  // 不知道体现在哪里
     }
   }
 })

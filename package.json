@@ -9,10 +9,10 @@
     "Canister"
   ],
   "scripts": {
-    "dev": "vite serve --mode development",
+    "dev": "vite",
     "build": "vite build",
     "prebuild": "npm run copy:types",
-    "start": "vite serve --mode development",
+    "start": "vite",
     "prestart": "npm run copy:types",
     "copy:types": "rsync -avr .dfx/$(echo ${DFX_NETWORK:-'**'})/canisters/** --exclude='assets/' --exclude='idl/' --exclude='*.wasm' --delete src/declarations"
   },
@@ -26,20 +26,14 @@
     "@vitejs/plugin-vue": "^1.9.3",
     "assert": "2.0.0",
     "buffer": "6.0.3",
-    "copy-webpack-plugin": "^9.0.1",
     "events": "3.3.0",
-    "html-webpack-plugin": "5.3.1",
     "process": "0.11.10",
     "stream-browserify": "3.0.0",
-    "terser-webpack-plugin": "5.1.1",
     "ts-loader": "^9.2.6",
     "typescript": "^4.4.4",
     "util": "0.12.3",
     "vite": "^2.6.4",
-    "vue-tsc": "^0.3.0",
-    "webpack": "5.24.4",
-    "webpack-cli": "^4.9.1",
-    "webpack-dev-server": "^4.5.0"
+    "vue-tsc": "^0.3.0"
   },
   "browserslist": [
     "last 2 chrome version",
