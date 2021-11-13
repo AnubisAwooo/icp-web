@@ -3,6 +3,9 @@ import vue from '@vitejs/plugin-vue'
 import path from "path";
 
 export default defineConfig(({ command, mode }) => {
+  let isDevelopment = mode !== 'production';
+  let network = 'local';
+  let canistersAlias = {};
   // 初始化 canisterId 进入环境
   function initCanisterIds() {
     let localCanisters: any, prodCanisters: any, canisters: any;
@@ -18,15 +21,16 @@ export default defineConfig(({ command, mode }) => {
       console.log("No production canister_ids.json found. Continuing with local");
     }
 
-    const network =
-      process.env.DFX_NETWORK ||
-      (mode === "production" ? "ic" : "local");
+    network = process.env.DFX_NETWORK || (isDevelopment ? "local" : "ic");
 
     canisters = network === "local" ? localCanisters : prodCanisters;
 
     for (const canister in canisters) {
       process.env[canister.toUpperCase() + "_CANISTER_ID"] =
         canisters[canister][network];
+    }
+    for (const canister in canisters) {
+      canistersAlias['dfx-generated/' + canister] = path.join(__dirname, ".dfx", network, "canisters", canister);
     }
   }
   initCanisterIds();
@@ -39,13 +43,14 @@ export default defineConfig(({ command, mode }) => {
       'process.env': { // 恢复环境变量
         ...process.env,
         'MODE': mode,
-        isDevelopment: mode !== 'production', // 判断是否是开发模式
+        isDevelopment, // 判断是否是开发模式
         NODE_ENV: mode, // 自动生成的 index.js 貌似要用这个变量
       } 
     },
     plugins: [vue()],
     resolve: {
       alias: { // 别名解析路径 @ 什么的
+        ...canistersAlias,
         "@": path.resolve(__dirname, "src/icp_web_assets/src"),
       },
       extensions: [".js", ".ts", ".jsx", ".tsx"], // import 可以省略的拓展名
@@ -60,7 +65,7 @@ export default defineConfig(({ command, mode }) => {
       },
       cors: true,
       watch: {
-        ignored: ['!**/node_modules/your-package-name/**']
+        ignored: ['!**/node_modules/icp_web_assets/**']
       }
     },
     build: {
