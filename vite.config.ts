@@ -2,43 +2,35 @@ import { defineConfig, UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from "path";
 
-// 初始化 canisterId 进入环境
-function initCanisterIds() {
-  let localCanisters: any, prodCanisters: any, canisters: any;
-
-  try {
-    localCanisters = require(path.resolve(".dfx", "local", "canister_ids.json"));
-  } catch (error) {
-    console.log("No local canister_ids.json found. Continuing production");
-  }
-  try {
-    prodCanisters = require(path.resolve("canister_ids.json"));
-  } catch (error) {
-    console.log("No production canister_ids.json found. Continuing with local");
-  }
-
-  const network =
-    process.env.DFX_NETWORK ||
-    (process.env.NODE_ENV === "production" ? "ic" : "local");
-
-  canisters = network === "local" ? localCanisters : prodCanisters;
-
-  for (const canister in canisters) {
-    process.env[canister.toUpperCase() + "_CANISTER_ID"] =
-      canisters[canister][network];
-  }
-}
-initCanisterIds();
-
-const isDevelopment = process.env.NODE_ENV !== "production";
-const asset_entry = path.join(
-  "src",
-  "icp_web_assets",
-  "src",
-  "index.html"
-);
-
 export default defineConfig(({ command, mode }) => {
+  // 初始化 canisterId 进入环境
+  function initCanisterIds() {
+    let localCanisters: any, prodCanisters: any, canisters: any;
+
+    try {
+      localCanisters = require(path.resolve(".dfx", "local", "canister_ids.json"));
+    } catch (error) {
+      console.log("No local canister_ids.json found. Continuing production");
+    }
+    try {
+      prodCanisters = require(path.resolve("canister_ids.json"));
+    } catch (error) {
+      console.log("No production canister_ids.json found. Continuing with local");
+    }
+
+    const network =
+      process.env.DFX_NETWORK ||
+      (mode === "production" ? "ic" : "local");
+
+    canisters = network === "local" ? localCanisters : prodCanisters;
+
+    for (const canister in canisters) {
+      process.env[canister.toUpperCase() + "_CANISTER_ID"] =
+        canisters[canister][network];
+    }
+  }
+  initCanisterIds();
+
   let common: UserConfig = {
     root: './src/icp_web_assets/src', // vite 执行的根目录
     publicDir: '../assets',
@@ -48,6 +40,7 @@ export default defineConfig(({ command, mode }) => {
         ...process.env,
         'MODE': mode,
         isDevelopment: mode !== 'production', // 判断是否是开发模式
+        NODE_ENV: mode, // 自动生成的 index.js 貌似要用这个变量
       } 
     },
     plugins: [vue()],
@@ -62,7 +55,7 @@ export default defineConfig(({ command, mode }) => {
         "/api": {
           target: "http://localhost:8000",
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
+          rewrite: (path) => path, // 调用后端不用移除 /api 标识，icp 的调用路径需要
         },
       },
       cors: true,

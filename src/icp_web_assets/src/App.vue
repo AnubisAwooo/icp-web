@@ -3,6 +3,12 @@
 // Check out https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup
 import HelloWorld from './components/HelloWorld.vue'
 if (process.env.isDevelopment) console.log('env1', process.env); // 开发模式才输出日志
+
+import { icp_web } from "../../declarations/icp_web";
+console.error('greeting');
+const greeting = await icp_web.greet('123123');
+console.error(greeting);
+
 </script>
 
 <template>
