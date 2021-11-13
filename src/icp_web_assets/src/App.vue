@@ -4,7 +4,7 @@
 import HelloWorld from './components/HelloWorld.vue'
 if (process.env.isDevelopment) console.log('env1', process.env); // 开发模式才输出日志
 
-import { icp_web } from "../../declarations/icp_web";
+import { icp_web } from "../../declarations/icp_web"; // 应当从配置文件中读取位置，然后引入调用
 console.error('greeting');
 const greeting = await icp_web.greet('123123');
 console.error(greeting);
