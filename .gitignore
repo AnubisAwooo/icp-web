@@ -13,3 +13,8 @@
 # frontend code
 node_modules/
 dist/
+
+# env
+# 根据自己环境配置，不用提交
+.env.local 
+.env.*.local
