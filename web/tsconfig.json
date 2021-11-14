@@ -18,6 +18,6 @@
     "src/icp_web_assets/src/**/*.vue"
   ],
   "exclude": [
-    "src/icp_web_assets/src/vite.config.ts"
+    "src/icp_web_assets/src/env.d.ts"
   ]
 }

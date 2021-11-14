@@ -1,4 +1,4 @@
-import { defineConfig, UserConfig } from 'vite'
+import { defineConfig, loadEnv, UserConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from "path";
 
@@ -9,7 +9,7 @@ import path from "path";
 
 
 
-function initCanisterIdsAndAlias(isDevelopment: boolean) {
+function initCanisterIdsAndAlias(isDevelopment: boolean, viteEnv: Record<string, string>) {
   let localCanisters: any, prodCanisters: any, canisters: any;
 
   try {
@@ -25,18 +25,21 @@ function initCanisterIdsAndAlias(isDevelopment: boolean) {
     console.log("No production canister_ids.json found. Continuing with local");
   }
 
-  const network = process.env.DFX_NETWORK || (isDevelopment ? "local" : "ic");
+  let network = process.env.DFX_NETWORK || (isDevelopment ? "local" : "ic");
+  if (viteEnv.VITE_LOCAL_NETWORK === 'local') network = 'local';
 
   canisters = network === "local" ? localCanisters : prodCanisters;
 
   for (const canister in canisters) {
-    process.env[canister.toUpperCase() + "_CANISTER_ID"] =
-      canisters[canister][network];
+    process.env[canister.toUpperCase() + "_CANISTER_ID"] = canisters[canister][network];
   }
   let canistersAlias = {};
   for (const canister in canisters) {
     canistersAlias['dfx-generated/' + canister] = path.join(__dirname, ".dfx", network, "canisters", canister);
   }
+
+  console.log('process.env', process.env);
+  console.log('canistersAlias', canistersAlias);
 
   return {
     network,
@@ -45,10 +48,14 @@ function initCanisterIdsAndAlias(isDevelopment: boolean) {
 }
 
 export default defineConfig(({ command, mode }) => {
+  // let viteEnv = {}; // 导入设置的环境变量，会根据选择的 mode 选择文件
+  let viteEnv = loadEnv(mode, process.cwd() + '/env'); // 导入设置的环境变量，会根据选择的 mode 选择文件
+  console.log('viteEnv', viteEnv);
+
   let isDevelopment = mode !== 'production';
 
   // 初始化 canisterId 进入环境
-  let {network, canistersAlias} = initCanisterIdsAndAlias(isDevelopment);
+  let {network, canistersAlias} = initCanisterIdsAndAlias(isDevelopment, viteEnv);
 
   let common: UserConfig = {
     root: './src/icp_web_assets/src', // vite 执行的根目录
@@ -60,7 +67,7 @@ export default defineConfig(({ command, mode }) => {
         'MODE': mode,
         isDevelopment, // 判断是否是开发模式
         NODE_ENV: mode, // 自动生成的 index.js 貌似要用这个变量
-      } 
+      }
     },
     plugins: [vue()],
     resolve: {
@@ -70,32 +77,33 @@ export default defineConfig(({ command, mode }) => {
       },
       extensions: [".js", ".ts", ".jsx", ".tsx"], // import 可以省略的拓展名
     },
-    server: {
-      proxy: {
-        "/api": {
-          target: "http://localhost:8000",
-          changeOrigin: true,
-          rewrite: (path) => path, // 调用后端不用移除 /api 标识，icp 的调用路径需要
-        },
-      },
-      cors: true,
-      watch: {
-        ignored: ['!**/node_modules/icp_web_assets/**']
-      }
-    },
     build: {
       outDir: '../../../dist/icp_web_assets', // 构建输出目录
-      minify: mode !== 'production' ? false : 'terser',
+      // minify: mode !== 'production' ? false : 'terser',
+      minify: false, // 暂时不压缩 debug 啊
     },
-    envDir: './.env' // 加载环境变量
   };
   if (command === 'serve') {
     return {
       // serve 独有配置 开发模式
       ...common,
-      
+
       logLevel: 'error', // 不知道体现在哪里
-      clearScreen: false, 
+      clearScreen: false,
+      server: {
+        port: 8080,
+        proxy: {
+          "/api": {
+            target: "http://localhost:8000",
+            changeOrigin: true,
+            rewrite: (path) => path, // 调用后端不用移除 /api 标识，icp 的调用路径需要
+          },
+        },
+        cors: true,
+        watch: {
+          ignored: ['!**/node_modules/icp_web_assets/**']
+        }
+      },
       optimizeDeps: {
         exclude: ['icp_web_assets'] // 不知道有没有用
       }
