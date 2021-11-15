@@ -10,8 +10,8 @@ import fs from "fs"
 // 对于 接口 的读取，同样是路径数组，全部加入
 
 function getCanisterIds(isDev: boolean, viteEnv: Record<string, string>) {
-  let developmentCanisterIdsPositions = viteEnv.VITE_DEVELOPMENT_CANISTER_IDS?.split(',') || [".dfx/local/canister_ids.json"];
-  let productionCanisterIdsPositions = viteEnv.VITE_PRODUCTION_CANISTER_IDS?.split(',') || ["./canister_ids.json"];
+  let developmentCanisterIdsPositions = viteEnv.VITE_CANISTER_IDS?.split(',') || [".dfx/local/canister_ids.json"];
+  let productionCanisterIdsPositions = viteEnv.VITE_CANISTER_IDS?.split(',') || ["./canister_ids.json"];
 
   let positions = isDev ? developmentCanisterIdsPositions : productionCanisterIdsPositions;
 
@@ -32,8 +32,8 @@ function getCanisterIds(isDev: boolean, viteEnv: Record<string, string>) {
 }
 
 function getCanisterApis(isDev: boolean, viteEnv: Record<string, string>) {
-  let developmentCanisterApisPositions = viteEnv.VITE_DEVELOPMENT_CANISTER_APIS?.split(',') || [".dfx/local/canisters"];
-  let productionCanisterApisPositions = viteEnv.VITE_PRODUCTION_CANISTER_APIS?.split(',') || [".dfx/local/canisters"];
+  let developmentCanisterApisPositions = viteEnv.VITE_CANISTER_APIS?.split(',') || [".dfx/local/canisters"];
+  let productionCanisterApisPositions = viteEnv.VITE_CANISTER_APIS?.split(',') || [".dfx/local/canisters"];
 
   let positions = isDev ? developmentCanisterApisPositions : productionCanisterApisPositions;
 

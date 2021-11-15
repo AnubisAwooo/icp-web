@@ -10,7 +10,7 @@
     },
     "backend_assets": {
       "dependencies": [
-        "backend"
+        "backend2"
       ],
       "frontend": {
         "entrypoint": "src/backend_assets/src/index.html"
