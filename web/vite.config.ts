@@ -95,6 +95,7 @@ console.log(canistersAlias);
 
   let common: UserConfig = {
     root: 'src', // vite 执行的根目录
+    publicDir: '../public',
     mode,
     define: {
       'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
