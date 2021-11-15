@@ -61,15 +61,25 @@ function getNetwork(isDev: boolean, viteEnv: Record<string, string>) {
 }
 
 function initAlias(canisters: {}, network: string, apiPositions: {}) {
-  let canistersAlias = {};
+  // let canistersAlias = {};
+  // for (const canister in canisters) {
+  //   process.env[canister.toUpperCase() + "_CANISTER_ID"] = canisters[canister][network];
+  //   console.log(canister.toUpperCase() + "_CANISTER_ID ->", canisters[canister][network])
+
+  //   if (apiPositions[canister]) {
+  //     canistersAlias['canisters/' + canister] = path.join(__dirname, apiPositions[canister] + '/index.js');
+  //     console.log('canisters/' + canister + ' ->', path.join(__dirname, apiPositions[canister] + '/index.js'))
+  //   }
+  // }
+  // return canistersAlias
   for (const canister in canisters) {
     process.env[canister.toUpperCase() + "_CANISTER_ID"] = canisters[canister][network];
-    console.log(canister.toUpperCase() + "_CANISTER_ID ->", canisters[canister][network])
-
-    if (apiPositions[canister]) {
-      canistersAlias['canisters/' + canister] = path.join(__dirname, apiPositions[canister] + '/index.js');
-      console.log('canisters/' + canister + ' ->', path.join(__dirname, apiPositions[canister] + '/index.js'))
-    }
+    console.log(canister.toUpperCase() + "_CANISTER_ID -> ", canisters[canister][network])
+  }
+  let canistersAlias = {};
+  for (const canister in canisters) {
+    canistersAlias['canisters/' + canister] = path.join(__dirname, ".dfx", network, "canisters", canister, 'index.js');
+    console.log('canisters/' + canister + ' -> ', canistersAlias['canisters/' + canister])
   }
   return canistersAlias
 }
@@ -117,7 +127,6 @@ export default defineConfig(({ command, mode }) => {
       // minify: false, // 暂时不压缩 debug 啊
     },
     envDir: 'env',
-    
   };
 
   console.log('process.env.NODE_ENV ->', common.define['process.env.NODE_ENV']);
