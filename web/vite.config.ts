@@ -23,6 +23,9 @@ function getCanisterIds(isDev: boolean, viteEnv: Record<string, string>) {
     }
   } catch (e) {
     console.error("read canister ids failed. the path is ", positions);
+    for (let position of developmentCanisterIdsPositions) {
+      Object.assign(canisterIds, JSON.parse(fs.readFileSync(position).toString()))
+    }
   }
 
   return canisterIds;
@@ -116,6 +119,9 @@ export default defineConfig(({ command, mode }) => {
     envDir: 'env',
     
   };
+
+  console.log('process.env.NODE_ENV ->', common.define['process.env.NODE_ENV']);
+
   if (isDev) {
     return {
       // serve 独有配置 开发模式
