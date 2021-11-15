@@ -4,6 +4,10 @@
       "main": "src/backend/main.mo",
       "type": "motoko"
     },
+    "backend2": {
+      "main": "src/backend2/main.mo",
+      "type": "motoko"
+    },
     "backend_assets": {
       "dependencies": [
         "backend"

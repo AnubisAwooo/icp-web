@@ -1,14 +1,16 @@
 <script setup lang="ts">
 // This starter template is using Vue 3 <script setup> SFCs
 // Check out https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup
-import HelloWorld from '@/components/HelloWorld.vue'
+import App1 from '@/components/v1_self/App.vue'
+import App2 from '@/components/v2_other/App.vue'
 
 
 </script>
 
 <template>
-  <img alt="Vue logo" src="./assets/logo.png" />
-  <HelloWorld msg="Hello Vue 3 + TypeScript + Vite" />
+  <div><App1/></div>
+  <div>=================================================================</div>
+  <div><App2/></div>
 </template>
 
 <style>

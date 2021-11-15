@@ -16,6 +16,7 @@
     "paths": {
       "canisters/icp_web": [ ".dfx/local/canisters/icp_web" ],
       "canisters/backend": [ "../backend/.dfx/local/canisters/backend" ],
+      "canisters/backend2": [ "../backend/.dfx/local/canisters/backend2" ],
     }
   },
   "include": [
