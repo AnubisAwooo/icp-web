@@ -61,46 +61,36 @@ function getNetwork(isDev: boolean, viteEnv: Record<string, string>) {
 }
 
 function initAlias(canisters: {}, network: string, apiPositions: {}) {
-  // let canistersAlias = {};
-  // for (const canister in canisters) {
-  //   process.env[canister.toUpperCase() + "_CANISTER_ID"] = canisters[canister][network];
-  //   console.log(canister.toUpperCase() + "_CANISTER_ID ->", canisters[canister][network])
-
-  //   if (apiPositions[canister]) {
-  //     canistersAlias['canisters/' + canister] = path.join(__dirname, apiPositions[canister] + '/index.js');
-  //     console.log('canisters/' + canister + ' ->', path.join(__dirname, apiPositions[canister] + '/index.js'))
-  //   }
-  // }
-  // return canistersAlias
-  for (const canister in canisters) {
-    process.env[canister.toUpperCase() + "_CANISTER_ID"] = canisters[canister][network];
-    console.log(canister.toUpperCase() + "_CANISTER_ID -> ", canisters[canister][network])
-  }
   let canistersAlias = {};
   for (const canister in canisters) {
-    canistersAlias['canisters/' + canister] = path.join(__dirname, ".dfx", network, "canisters", canister, 'index.js');
-    console.log('canisters/' + canister + ' -> ', canistersAlias['canisters/' + canister])
+    process.env[canister.toUpperCase() + "_CANISTER_ID"] = canisters[canister][network];
+    console.log(canister.toUpperCase() + "_CANISTER_ID ->", canisters[canister][network])
+
+    if (apiPositions[canister]) {
+      canistersAlias['canisters/' + canister] = path.join(__dirname, apiPositions[canister] + '/index.js');
+      console.log('canisters/' + canister + ' ->', path.join(__dirname, apiPositions[canister] + '/index.js'))
+    }
   }
   return canistersAlias
 }
 
 export default defineConfig(({ command, mode }) => {
+  let viteEnv = loadEnv(mode, './env'); // 导入设置的环境变量，会根据选择的 mode 选择文件
+  console.log('viteEnv', viteEnv);
+
   // 要判断是不是生产模式 command=build mode=ic
   console.log('viteEnv', command);
   console.log('viteEnv', mode);
-  let isDev = command !== 'build' || mode !== 'ic'
-
-  let viteEnv = loadEnv(mode, './env'); // 导入设置的环境变量，会根据选择的 mode 选择文件
-  console.log('viteEnv', viteEnv);
+  let isDev = command !== 'build' || viteEnv.VITE_NETWORK !== 'ic'
 
   let canisterIds = getCanisterIds(isDev, viteEnv);
   let canisterApis = getCanisterApis(isDev, viteEnv);
   let network = getNetwork(isDev, viteEnv);
-  console.log('network ->', network);
+  console.log('network -> ', network);
   let canistersAlias = initAlias(canisterIds, network, canisterApis);
 
   const DFX_PORT = dfxJson.networks.local.bind.split(":")[1]
-  console.log('proxy port ->', DFX_PORT)
+  console.log('proxy port -> ', DFX_PORT)
 
   // process.env.mode = mode; // 代码里面也可以判断是否是本地网络
   // process.env.network = network; // 网络 local 或 ic
