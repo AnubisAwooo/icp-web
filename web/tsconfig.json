@@ -14,7 +14,7 @@
     "types": ["vite/client"],
     "baseUrl": ".",
     "paths": {
-      "dfx-generated/icp_web": [ ".dfx/local/canisters/icp_web" ],
+      "canisters/icp_web": [ ".dfx/local/canisters/icp_web" ],
     }
   },
   "include": [

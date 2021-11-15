@@ -8,101 +8,69 @@ import fs from "fs"
 // 主要获取的信息有 需要用到的一些 canister id 和 这些 id 对应的接口，把这类文件找对
 // 对于 id 的读取，我希望配置到一个确定的路径数组中，全部加入
 // 对于 接口 的读取，同样是路径数组，全部加入
-const isDev = process.env["DFX_NETWORK"] !== "ic"
 
-let canisterIds
-try {
-  canisterIds = JSON.parse(fs.readFileSync(isDev ? ".dfx/local/canister_ids.json" : "./canister_ids.json"))
-} catch (e) {
+function getCanisters(isDevelopment: boolean, viteEnv: Record<string, string>) {
+  let developmentCanistersPositions = viteEnv.VITE_DEVELOPMENT_CANISTER_IDS?.split(',') || [".dfx/local/canister_ids.json"];
+  let productionCanistersPositions = viteEnv.VITE_PRODUCTION_CANISTER_IDS?.split(',') || ["./canister_ids.json"];
 
+  let positions = isDevelopment || viteEnv.VITE_LOCAL_NETWORK ? developmentCanistersPositions : productionCanistersPositions;
+
+  let canisters = {}
+  try {
+    for (let i in positions) {
+      // console.log(i, positions[i], JSON.parse(fs.readFileSync(positions[i]).toString()))
+      Object.assign(canisters, JSON.parse(fs.readFileSync(positions[i]).toString()))
+    }
+  } catch (e) {
+    console.error("read canister ids failed. the path is ", positions);
+  }
+
+  return canisters;
 }
 
-function initCanisterIdsAndAlias(isDevelopment: boolean, viteEnv: Record<string, string>) {
-  let localCanisters: any, prodCanisters: any, canisters: any;
-
-  try {
-    // 读取本地开发环境的 canister id 路径是 ./.dfx/local/canister_ids.json
-    localCanisters = require(path.resolve(".dfx", "local", "canister_ids.json"));
-  } catch (error) {
-    console.log("No local canister_ids.json found. Continuing production");
-  }
-  try {
-    // 读取生产环境的 canister id 路径是 ./canister_ids.json
-    prodCanisters = require(path.resolve("canister_ids.json"));
-  } catch (error) {
-    console.log("No production canister_ids.json found. Continuing with local");
-  }
-
+function getNetwork(isDevelopment: boolean, viteEnv: Record<string, string>) {
   let network = process.env.DFX_NETWORK || (isDevelopment ? "local" : "ic");
   if (viteEnv.VITE_LOCAL_NETWORK === 'local') network = 'local';
+  return network;
+}
 
-  canisters = network === "local" ? localCanisters : prodCanisters;
-
+function initAlias(canisters: {}, network: string) {
   for (const canister in canisters) {
     process.env[canister.toUpperCase() + "_CANISTER_ID"] = canisters[canister][network];
+    console.log(canister.toUpperCase() + "_CANISTER_ID -> ", canisters[canister][network])
   }
   let canistersAlias = {};
   for (const canister in canisters) {
-    // canistersAlias['dfx-generated/' + canister] = path.join(__dirname, ".dfx", network, "canisters", canister);
-    // canistersAlias['dfx-generated/' + canister] = path.join(__dirname, ".dfx", network, "canisters", canister, canister + '.did.js');
-    canistersAlias['dfx-generated/' + canister] = path.join(__dirname, ".dfx", network, "canisters", canister, 'index.js');
+    canistersAlias['canisters/' + canister] = path.join(__dirname, ".dfx", network, "canisters", canister, 'index.js');
+    console.log('canisters/' + canister + ' -> ', canistersAlias['canisters/' + canister])
   }
-
-  console.log('process.env', process.env);
-  console.log('canistersAlias', canistersAlias);
-
-  return {
-    network,
-    canistersAlias,
-  }
+  return canistersAlias
 }
 
-// List of all aliases for canisters
-const aliases = Object.entries(dfxJson.canisters).reduce(
-  (acc, [name, _value]) => {
-    // Get the network name, or `local` by default.
-    const networkName = process.env["DFX_NETWORK"] || "local";
-    const outputRoot = path.join(
-      __dirname,
-      ".dfx",
-      networkName,
-      "canisters",
-      name
-    );
-
-    return {
-      ...acc,
-      ["dfx-generated/" + name]: path.join(outputRoot, name + ".did.js"),
-    };
-  },
-  {}
-);
-
-console.log('aliases', aliases)
-
-
 export default defineConfig(({ command, mode }) => {
-  // let viteEnv = {}; // 导入设置的环境变量，会根据选择的 mode 选择文件
   let viteEnv = loadEnv(mode, './env'); // 导入设置的环境变量，会根据选择的 mode 选择文件
   console.log('viteEnv', viteEnv);
 
   let isDevelopment = mode !== 'production';
 
-  // 初始化 canisterId 进入环境
-  let {network, canistersAlias} = initCanisterIdsAndAlias(isDevelopment, viteEnv);
+  let canisters = getCanisters(isDevelopment, viteEnv);
+  let network = getNetwork(isDevelopment, viteEnv);
+  console.log('network -> ', network);
+  let canistersAlias = initAlias(canisters, network);
 
-console.log(canistersAlias);
+  const DFX_PORT = dfxJson.networks.local.bind.split(":")[1]
+  console.log('proxy port -> ', DFX_PORT)
+
+  // process.env.mode = mode; // 代码里面也可以判断是否是本地网络
+  // process.env.network = network; // 网络 local 或 ic
 
   let common: UserConfig = {
     root: 'src', // vite 执行的根目录
     publicDir: '../public',
     mode,
     define: {
-      'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
-      'process.env': { // 恢复环境变量
-        ...process.env,// 判断是否是开发模式
-        // 'NODE_ENV': JSON.stringify(mode), // 自动生成的 index.js 貌似要用这个变量
-      },
+      'process.env.NODE_ENV': JSON.stringify(isDevelopment ? 'development' : 'production'),
+      'process.env': process.env,
     },
     plugins: [vue()],
     resolve: {
@@ -114,9 +82,10 @@ console.log(canistersAlias);
     },
     build: {
       outDir: '../dist/web', // 构建输出目录
-      // minify: mode !== 'production' ? false : 'terser',
-      minify: false, // 暂时不压缩 debug 啊
+      minify: isDevelopment ? false : 'terser',
+      // minify: false, // 暂时不压缩 debug 啊
     },
+    envDir: 'env',
   };
   if (command === 'serve') {
     return {
@@ -129,7 +98,7 @@ console.log(canistersAlias);
         port: 8080,
         proxy: {
           "/api": {
-            target: "http://localhost:8000",
+            target: "http://localhost:" + DFX_PORT,
             changeOrigin: true,
             rewrite: (path) => path, // 调用后端不用移除 /api 标识，icp 的调用路径需要
           },
