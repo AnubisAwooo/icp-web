@@ -14,7 +14,7 @@ try {
 } catch (e) {
   console.error(e)
 }
-console.log('mode', JSON.stringify("production"))
+// console.log('mode', JSON.stringify("production"))
 // import { icp_web } from "dfx-generated/icp_web"; // 应当从配置文件中读取位置，然后引入调用
 // // import { icp_web } from "/Users/gleam/Downloads/projects/icpleague/icp_web/web/.dfx/local/canisters/icp_web"; // 应当从配置文件中读取位置，然后引入调用
 // // let icp_web = require("@/declarations/icp_web"); // 应当从配置文件中读取位置，然后引入调用
@@ -29,6 +29,16 @@ console.log('mode', JSON.stringify("production"))
 // } catch (e) {
 //   console.error(e)
 // }
+
+// import { backend } from "canisters/backend"; // 应当从配置文件中读取位置，然后引入调用
+// console.error('greeting', backend);
+// try {
+//   console.error('greeting', backend);
+//   backend.greet('123123').then((g: string) => console.error(g));
+// } catch (e) {
+//   console.error(e)
+// }
+
 
 // (window as any).global = window; // fix: ReferenceError: global is not defined. @dfinity/agent requires.
 

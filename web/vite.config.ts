@@ -9,23 +9,47 @@ import fs from "fs"
 // 对于 id 的读取，我希望配置到一个确定的路径数组中，全部加入
 // 对于 接口 的读取，同样是路径数组，全部加入
 
-function getCanisters(isDev: boolean, viteEnv: Record<string, string>) {
-  let developmentCanistersPositions = viteEnv.VITE_DEVELOPMENT_CANISTER_IDS?.split(',') || [".dfx/local/canister_ids.json"];
-  let productionCanistersPositions = viteEnv.VITE_PRODUCTION_CANISTER_IDS?.split(',') || ["./canister_ids.json"];
+function getCanisterIds(isDev: boolean, viteEnv: Record<string, string>) {
+  let developmentCanisterIdsPositions = viteEnv.VITE_DEVELOPMENT_CANISTER_IDS?.split(',') || [".dfx/local/canister_ids.json"];
+  let productionCanisterIdsPositions = viteEnv.VITE_PRODUCTION_CANISTER_IDS?.split(',') || ["./canister_ids.json"];
 
-  let positions = isDev ? developmentCanistersPositions : productionCanistersPositions;
+  let positions = isDev ? developmentCanisterIdsPositions : productionCanisterIdsPositions;
 
-  let canisters = {}
+  let canisterIds = {}
   try {
-    for (let i in positions) {
-      // console.log(i, positions[i], JSON.parse(fs.readFileSync(positions[i]).toString()))
-      Object.assign(canisters, JSON.parse(fs.readFileSync(positions[i]).toString()))
+    for (let position of positions) {
+      // console.log(i, position, JSON.parse(fs.readFileSync(position).toString()))
+      Object.assign(canisterIds, JSON.parse(fs.readFileSync(position).toString()))
     }
   } catch (e) {
     console.error("read canister ids failed. the path is ", positions);
   }
 
-  return canisters;
+  return canisterIds;
+}
+
+function getCanisterApis(isDev: boolean, viteEnv: Record<string, string>) {
+  let developmentCanisterApisPositions = viteEnv.VITE_DEVELOPMENT_CANISTER_APIS?.split(',') || [".dfx/local/canisters"];
+  let productionCanisterApisPositions = viteEnv.VITE_PRODUCTION_CANISTER_APIS?.split(',') || [".dfx/local/canisters"];
+
+  let positions = isDev ? developmentCanisterApisPositions : productionCanisterApisPositions;
+
+  let canisterApis = {}
+  try {
+    for (let position of positions) {
+      let dirs = fs.readdirSync(position)
+      console.log('dirs', dirs);
+      for (let dir of dirs) {
+        if (fs.lstatSync(position + '/' + dir).isDirectory()) {
+          canisterApis[dir] = position + '/' + dir
+        }
+      }
+    }
+  } catch (e) {
+    console.error("read canister api failed. the path is ", positions);
+  }
+
+  return canisterApis;
 }
 
 function getNetwork(isDev: boolean, viteEnv: Record<string, string>) {
@@ -33,15 +57,16 @@ function getNetwork(isDev: boolean, viteEnv: Record<string, string>) {
   return network;
 }
 
-function initAlias(canisters: {}, network: string) {
-  for (const canister in canisters) {
-    process.env[canister.toUpperCase() + "_CANISTER_ID"] = canisters[canister][network];
-    console.log(canister.toUpperCase() + "_CANISTER_ID -> ", canisters[canister][network])
-  }
+function initAlias(canisters: {}, network: string, apiPositions: {}) {
   let canistersAlias = {};
   for (const canister in canisters) {
-    canistersAlias['canisters/' + canister] = path.join(__dirname, ".dfx", network, "canisters", canister, 'index.js');
-    console.log('canisters/' + canister + ' -> ', canistersAlias['canisters/' + canister])
+    process.env[canister.toUpperCase() + "_CANISTER_ID"] = canisters[canister][network];
+    console.log(canister.toUpperCase() + "_CANISTER_ID ->", canisters[canister][network])
+
+    if (apiPositions[canister]) {
+      canistersAlias['canisters/' + canister] = path.join(__dirname, apiPositions[canister] + '/index.js');
+      console.log('canisters/' + canister + ' ->', path.join(__dirname, apiPositions[canister] + '/index.js'))
+    }
   }
   return canistersAlias
 }
@@ -55,13 +80,14 @@ export default defineConfig(({ command, mode }) => {
   let viteEnv = loadEnv(mode, './env'); // 导入设置的环境变量，会根据选择的 mode 选择文件
   console.log('viteEnv', viteEnv);
 
-  let canisters = getCanisters(isDev, viteEnv);
+  let canisterIds = getCanisterIds(isDev, viteEnv);
+  let canisterApis = getCanisterApis(isDev, viteEnv);
   let network = getNetwork(isDev, viteEnv);
-  console.log('network -> ', network);
-  let canistersAlias = initAlias(canisters, network);
+  console.log('network ->', network);
+  let canistersAlias = initAlias(canisterIds, network, canisterApis);
 
   const DFX_PORT = dfxJson.networks.local.bind.split(":")[1]
-  console.log('proxy port -> ', DFX_PORT)
+  console.log('proxy port ->', DFX_PORT)
 
   // process.env.mode = mode; // 代码里面也可以判断是否是本地网络
   // process.env.network = network; // 网络 local 或 ic
@@ -88,6 +114,7 @@ export default defineConfig(({ command, mode }) => {
       // minify: false, // 暂时不压缩 debug 啊
     },
     envDir: 'env',
+    
   };
   if (isDev) {
     return {
