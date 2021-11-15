@@ -9,7 +9,13 @@
     "sourceMap": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "lib": ["esnext", "dom"]
+    "noImplicitAny":  false,
+    "lib": ["esnext", "dom"],
+    "types": ["vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      "dfx-generated/icp_web": [ ".dfx/local/canisters/icp_web" ],
+    }
   },
   "include": [
     "src/icp_web_assets/src/**/*.ts", 

@@ -1,13 +1,21 @@
+import vue from "@vitejs/plugin-vue"
 import { defineConfig, loadEnv, UserConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import path from "path";
+import path from "path"
+import dfxJson from "./dfx.json"
+import fs from "fs"
 
 // 区分环境配置，关键点在于开发环境需要哪些东西，这些东西怎么来？
 // 主要获取的信息有 需要用到的一些 canister id 和 这些 id 对应的接口，把这类文件找对
 // 对于 id 的读取，我希望配置到一个确定的路径数组中，全部加入
 // 对于 接口 的读取，同样是路径数组，全部加入
+const isDev = process.env["DFX_NETWORK"] !== "ic"
 
+let canisterIds
+try {
+  canisterIds = JSON.parse(fs.readFileSync(isDev ? ".dfx/local/canister_ids.json" : "./canister_ids.json"))
+} catch (e) {
 
+}
 
 function initCanisterIdsAndAlias(isDevelopment: boolean, viteEnv: Record<string, string>) {
   let localCanisters: any, prodCanisters: any, canisters: any;
@@ -35,7 +43,9 @@ function initCanisterIdsAndAlias(isDevelopment: boolean, viteEnv: Record<string,
   }
   let canistersAlias = {};
   for (const canister in canisters) {
-    canistersAlias['dfx-generated/' + canister] = path.join(__dirname, ".dfx", network, "canisters", canister);
+    // canistersAlias['dfx-generated/' + canister] = path.join(__dirname, ".dfx", network, "canisters", canister);
+    // canistersAlias['dfx-generated/' + canister] = path.join(__dirname, ".dfx", network, "canisters", canister, canister + '.did.js');
+    canistersAlias['dfx-generated/' + canister] = path.join(__dirname, ".dfx", network, "canisters", canister, 'index.js');
   }
 
   console.log('process.env', process.env);
@@ -47,9 +57,33 @@ function initCanisterIdsAndAlias(isDevelopment: boolean, viteEnv: Record<string,
   }
 }
 
+// List of all aliases for canisters
+const aliases = Object.entries(dfxJson.canisters).reduce(
+  (acc, [name, _value]) => {
+    // Get the network name, or `local` by default.
+    const networkName = process.env["DFX_NETWORK"] || "local";
+    const outputRoot = path.join(
+      __dirname,
+      ".dfx",
+      networkName,
+      "canisters",
+      name
+    );
+
+    return {
+      ...acc,
+      ["dfx-generated/" + name]: path.join(outputRoot, name + ".did.js"),
+    };
+  },
+  {}
+);
+
+console.log('aliases', aliases)
+
+
 export default defineConfig(({ command, mode }) => {
   // let viteEnv = {}; // 导入设置的环境变量，会根据选择的 mode 选择文件
-  let viteEnv = loadEnv(mode, process.cwd() + '/env'); // 导入设置的环境变量，会根据选择的 mode 选择文件
+  let viteEnv = loadEnv(mode, './env'); // 导入设置的环境变量，会根据选择的 mode 选择文件
   console.log('viteEnv', viteEnv);
 
   let isDevelopment = mode !== 'production';
@@ -57,17 +91,18 @@ export default defineConfig(({ command, mode }) => {
   // 初始化 canisterId 进入环境
   let {network, canistersAlias} = initCanisterIdsAndAlias(isDevelopment, viteEnv);
 
+console.log(canistersAlias);
+
   let common: UserConfig = {
     root: './src/icp_web_assets/src', // vite 执行的根目录
     publicDir: '../assets',
     mode,
     define: {
+      'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
       'process.env': { // 恢复环境变量
-        ...process.env,
-        'MODE': mode,
-        isDevelopment, // 判断是否是开发模式
-        NODE_ENV: mode, // 自动生成的 index.js 貌似要用这个变量
-      }
+        ...process.env,// 判断是否是开发模式
+        // 'NODE_ENV': JSON.stringify(mode), // 自动生成的 index.js 貌似要用这个变量
+      },
     },
     plugins: [vue()],
     resolve: {
