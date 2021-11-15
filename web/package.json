@@ -10,9 +10,9 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build --emptyOutDir",
+    "build": "vue-tsc --noEmit && vite build --emptyOutDir --mode=ic",
     "prebuild": "npm run copy:types",
-    "start": "vite",
+    "start": "vue-tsc --noEmit && vite build --emptyOutDir && dfx canister install web --mode=reinstall",
     "prestart": "npm run copy:types",
     "copy:types": "rsync -avr .dfx/$(echo ${DFX_NETWORK:-'**'})/canisters/** --exclude='assets/' --exclude='idl/' --exclude='*.wasm' --delete src/declarations"
   },

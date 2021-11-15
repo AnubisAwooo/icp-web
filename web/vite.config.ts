@@ -9,11 +9,11 @@ import fs from "fs"
 // 对于 id 的读取，我希望配置到一个确定的路径数组中，全部加入
 // 对于 接口 的读取，同样是路径数组，全部加入
 
-function getCanisters(isDevelopment: boolean, viteEnv: Record<string, string>) {
+function getCanisters(isDev: boolean, viteEnv: Record<string, string>) {
   let developmentCanistersPositions = viteEnv.VITE_DEVELOPMENT_CANISTER_IDS?.split(',') || [".dfx/local/canister_ids.json"];
   let productionCanistersPositions = viteEnv.VITE_PRODUCTION_CANISTER_IDS?.split(',') || ["./canister_ids.json"];
 
-  let positions = isDevelopment || viteEnv.VITE_LOCAL_NETWORK ? developmentCanistersPositions : productionCanistersPositions;
+  let positions = isDev ? developmentCanistersPositions : productionCanistersPositions;
 
   let canisters = {}
   try {
@@ -28,9 +28,8 @@ function getCanisters(isDevelopment: boolean, viteEnv: Record<string, string>) {
   return canisters;
 }
 
-function getNetwork(isDevelopment: boolean, viteEnv: Record<string, string>) {
-  let network = process.env.DFX_NETWORK || (isDevelopment ? "local" : "ic");
-  if (viteEnv.VITE_LOCAL_NETWORK === 'local') network = 'local';
+function getNetwork(isDev: boolean, viteEnv: Record<string, string>) {
+  let network = process.env.DFX_NETWORK || (isDev ? "local" : "ic");
   return network;
 }
 
@@ -48,13 +47,16 @@ function initAlias(canisters: {}, network: string) {
 }
 
 export default defineConfig(({ command, mode }) => {
+  // 要判断是不是生产模式 command=build mode=ic
+  console.log('viteEnv', command);
+  console.log('viteEnv', mode);
+  let isDev = command !== 'build' || mode !== 'ic'
+
   let viteEnv = loadEnv(mode, './env'); // 导入设置的环境变量，会根据选择的 mode 选择文件
   console.log('viteEnv', viteEnv);
 
-  let isDevelopment = mode !== 'production';
-
-  let canisters = getCanisters(isDevelopment, viteEnv);
-  let network = getNetwork(isDevelopment, viteEnv);
+  let canisters = getCanisters(isDev, viteEnv);
+  let network = getNetwork(isDev, viteEnv);
   console.log('network -> ', network);
   let canistersAlias = initAlias(canisters, network);
 
@@ -69,7 +71,7 @@ export default defineConfig(({ command, mode }) => {
     publicDir: '../public',
     mode,
     define: {
-      'process.env.NODE_ENV': JSON.stringify(isDevelopment ? 'development' : 'production'),
+      'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
       'process.env': process.env,
     },
     plugins: [vue()],
@@ -82,12 +84,12 @@ export default defineConfig(({ command, mode }) => {
     },
     build: {
       outDir: '../dist/web', // 构建输出目录
-      minify: isDevelopment ? false : 'terser',
+      minify: isDev ? false : 'terser',
       // minify: false, // 暂时不压缩 debug 啊
     },
     envDir: 'env',
   };
-  if (command === 'serve') {
+  if (isDev) {
     return {
       // serve 独有配置 开发模式
       ...common,
