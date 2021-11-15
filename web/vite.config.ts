@@ -94,8 +94,7 @@ export default defineConfig(({ command, mode }) => {
 console.log(canistersAlias);
 
   let common: UserConfig = {
-    root: './src/icp_web_assets/src', // vite 执行的根目录
-    publicDir: '../assets',
+    root: 'src', // vite 执行的根目录
     mode,
     define: {
       'process.env.NODE_ENV': JSON.stringify(isDev ? 'development' : 'production'),
@@ -108,12 +107,12 @@ console.log(canistersAlias);
     resolve: {
       alias: { // 别名解析路径 @ 什么的
         ...canistersAlias,
-        "@": path.resolve(__dirname, "src/icp_web_assets/src"),
+        "@": path.resolve(__dirname, "src"),
       },
       extensions: [".js", ".ts", ".jsx", ".tsx"], // import 可以省略的拓展名
     },
     build: {
-      outDir: '../../../dist/icp_web_assets', // 构建输出目录
+      outDir: '../dist/web', // 构建输出目录
       // minify: mode !== 'production' ? false : 'terser',
       minify: false, // 暂时不压缩 debug 啊
     },
@@ -135,12 +134,9 @@ console.log(canistersAlias);
           },
         },
         cors: true,
-        watch: {
-          ignored: ['!**/node_modules/icp_web_assets/**']
-        }
       },
       optimizeDeps: {
-        exclude: ['icp_web_assets'] // 不知道有没有用
+        exclude: ['web'] // 不知道有没有用
       }
     }
   } else {

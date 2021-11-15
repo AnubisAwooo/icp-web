@@ -1,19 +1,19 @@
 {
   "canisters": {
     "icp_web": {
-      "main": "src/icp_web/main.mo",
+      "main": "icp_web/main.mo",
       "type": "motoko"
     },
-    "icp_web_assets": {
+    "web": {
       "dependencies": [
         "icp_web"
       ],
       "frontend": {
-        "entrypoint": "src/icp_web_assets/src/index.html"
+        "entrypoint": "src/index.html"
       },
       "source": [
-        "src/icp_web_assets/assets",
-        "dist/icp_web_assets/"
+        "public",
+        "dist/web/"
       ],
       "type": "assets"
     }
