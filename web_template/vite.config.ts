@@ -8,7 +8,7 @@ function getCanisterIds(isDev: boolean, viteEnv: Record<string, string>) {
   const developmentCanisterIdsPositions = [".dfx/local/canister_ids.json"];
   const productionCanisterIdsPositions = ["./canister_ids.json"];
 
-  let positions = viteEnv.VITE_CANISTER_IDS?.split(',') || isDev ? developmentCanisterIdsPositions : productionCanisterIdsPositions;
+  let positions = viteEnv.VITE_CANISTER_IDS?.split(',') || (isDev ? developmentCanisterIdsPositions : productionCanisterIdsPositions);
 
   let canisterIds = {}
   let flag = true;
@@ -64,11 +64,11 @@ function getNetwork(isDev: boolean, viteEnv: Record<string, string>) {
   return network;
 }
 
-function initAlias(canisters: {}, network: string, apiPositions: {}) {
+function initAlias(canisterIds: {}, network: string, apiPositions: {}) {
   let canistersAlias = {};
-  for (const canister in canisters) {
-    process.env[canister.toUpperCase() + "_CANISTER_ID"] = canisters[canister][network];
-    console.log(canister.toUpperCase() + "_CANISTER_ID", canisters[canister][network])
+  for (const canister in canisterIds) {
+    process.env[canister.toUpperCase() + "_CANISTER_ID"] = canisterIds[canister][network];
+    console.log(canister.toUpperCase() + "_CANISTER_ID", canisterIds[canister][network])
 
     if (apiPositions[canister]) {
       canistersAlias['canisters/' + canister] = path.join(__dirname, apiPositions[canister] + '/index.js');
